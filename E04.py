@@ -15,8 +15,8 @@ class Z_prior(Random):
 
     @bricks.application(input=['size'])
     def apply(self, size):
-        return self.theano_rng.normal(avg=0., std=3,
-                                      size=(size, self.dim), dtype='float32')
+        return self.theano_rng.normal(
+            avg=0., std=3, size=(size, self.dim), dtype='float32')
 
 
 class DropOut(Random):
@@ -88,13 +88,17 @@ class GAN(bricks.base.Brick):
         return self._gen.apply(z), z
 
 
+class EBGAN(bricks.base.Brick):
+    pass
+
 if __name__ == '__main__':
+    import os
+    import time
     import logging
     from fuel.datasets.mnist import MNIST
     from fuel.streams import DataStream
     from fuel.transformers import Flatten
     from fuel.schemes import SequentialScheme
-    from blocks.algorithms import Scale
     from blocks.filter import VariableFilter
     from blocks.extensions import Printing
     from blocks.extensions import ProgressBar
@@ -105,6 +109,7 @@ if __name__ == '__main__':
     from blocks.graph import ComputationGraph
     from blocks.initialization import IsotropicGaussian, Constant
     from blocks.extensions.monitoring import TrainingDataMonitoring
+    from checkpoints import PartsOnlyCheckpoint
     import numpy as np
 
     logger = logging.Logger(__name__)
@@ -145,7 +150,6 @@ if __name__ == '__main__':
     loss = AdverserialLoss()
     dis_obj, gen_obj = loss.apply(y_hat0, y_hat1)
 
-    #raise
     dis_obj.name = 'Discriminator loss'
     gen_obj.name = 'Generator loss'
     cg = ComputationGraph([gen_obj, dis_obj])
@@ -174,14 +178,23 @@ if __name__ == '__main__':
     monitor = TrainingDataMonitoring(variables=[gen_obj, dis_obj],
                                      prefix="train", after_batch=True)
     # monitoring = [GenerateNegtiveSample(every_n_epochs=100)]
+
+    subdir = './exp/' + 'mnist' + "-" + time.strftime("%Y%m%d-%H%M%S")
+
+    check_point = PartsOnlyCheckpoint("{}/{}".format(subdir, 'mnist'),
+                                      before_training=True, after_epoch=True,
+                                      save_separately=['log', 'model'])
+
+    if not os.path.exists(subdir):
+        os.makedirs(subdir)
+
     main_loop = MainLoop(algorithm=algo,
                          data_stream=train_stream,
-                         extensions=[Printing(), ProgressBar(), monitor
-                                     ])
+                         extensions=[Printing(), ProgressBar(), monitor,
+                                     check_point])
     #                     model=model,
     #                     extentions=[])
     # algo.initialize()
-    #algo.process_batch({'features': test_data.values()[0]})
+    # algo.process_batch({'features': test_data.values()[0]})
     # print dis_obj.eval(test_data)
     main_loop.run()
-

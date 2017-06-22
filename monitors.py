@@ -22,3 +22,7 @@ class GenerateNegtiveSample(SimpleExtension, MonitoringExtension):
         images = self.img_variable
         _plot_images(images, file_name="./neg_samples_{}".format(
             self.main_loop.status['epoch_done']))
+
+
+class MarginMonitor():
+    pass
