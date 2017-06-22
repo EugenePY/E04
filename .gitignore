@@ -1,0 +1,9 @@
+.DStore
+*.pyc
+*.gz
+*.hdf5
+*.pkl
+./exps/*
+./refs/*
+*.swp
+*.swo
