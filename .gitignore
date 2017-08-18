@@ -4,6 +4,12 @@
 *.hdf5
 *.pkl
 ./exps/*
+./exp/*
 ./refs/*
+./juice_suckers/*
+./trained_model/*
+./modules/*
+*.hdf5
+*.gz
 *.swp
 *.swo
